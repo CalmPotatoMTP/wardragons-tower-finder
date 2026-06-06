@@ -1,1 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>War Dragons Tower Finder</title>
 
+<style>
+body {
+    font-family: Arial;
+    max-width: 900px;
+    margin: auto;
+    padding: 20px;
+}
+
+select, button {
+    padding: 8px;
+    margin: 5px;
+    font-size: 14px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+th, td {
+    border: 1px solid #ccc;
+    padding: 8px;
+    text-align: left;
+}
+</style>
+</head>
+
+<body>
+
+<h2>War Dragons Tower Finder</h2>
+
+<select id="towerSelect"></select>
+<button onclick="search()">Find Highest</button>
+
+<div id="results"></div>
+
+<script>
+
+const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQSlEUS6MDHupFoy3cmgAkBMrKudzYQr-3nJheF0WG6-f1rGhrBf2DmROEx-H0YuWmFo1dfF4dIvg-N/pub?output=csv";
+
+let data = [];
+let headers = [];
+
+async function loadData() {
+
+    const res = await fetch(CSV_URL);
+    const text = await res.text();
+
+    const rows = text.trim().split("\n").map(r => r.split(","));
+
+    headers = rows[0].map(h => h.replace(/"/g,"").trim());
+
+    const towerSelect = document.getElementById("towerSelect");
+
+    // tower columns start after "Team"
+    const startIndex = headers.indexOf("Team") + 1;
+
+    for (let i = startIndex; i < headers.length; i++) {
+        let opt = document.createElement("option");
+        opt.value = headers[i];
+        opt.textContent = headers[i];
+        towerSelect.appendChild(opt);
+    }
+
+    data = rows.slice(1).map(r => {
+        let obj = {};
+        headers.forEach((h,i) => {
+            obj[h] = (r[i] || "").replace(/"/g,"").trim();
+        });
+        return obj;
+    });
+}
+
+function search() {
+
+    const tower = document.getElementById("towerSelect").value;
+
+    let max = 0;
+
+    data.forEach(d => {
+        let val = Number(d[tower]) || 0;
+        if (val > max) max = val;
+    });
+
+    const results = data.filter(d => Number(d[tower]) === max);
+
+    let html = `<h3>Highest ${tower}: ${max}</h3>`;
+    html += "<table><tr><th>Base/Player</th><th>Team</th><th>Value</th></tr>";
+
+    results.forEach(r => {
+        html += `<tr>
+            <td>${r["Player Name"]}</td>
+            <td>${r["Team"]}</td>
+            <td>${r[tower]}</td>
+        </tr>`;
+    });
+
+    html += "</table>";
+
+    document.getElementById("results").innerHTML = html;
+}
+
+loadData();
+
+</script>
+
+</body>
+</html>
