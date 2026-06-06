@@ -5,7 +5,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>War Dragons Tower Finder</title>
+<title>Egg Mission Bases</title>
 
 <style>
 
@@ -104,11 +104,11 @@ button:active {
 
 <div class="container">
 
-<h2>War Dragons Tower Finder</h2>
+<h2>Egg Mission Bases</h2>
 
 <div class="controls">
     <select id="towerSelect"></select>
-    <button onclick="search()">Find Results</button>
+    <button id="searchBtn" onclick="search()">Find Bases</button>
 </div>
 
 <div id="results"></div>
@@ -122,7 +122,6 @@ const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQSlEUS6MDHupFo
 let data = [];
 let headers = [];
 let towers = [];
-let startIndex = 0;
 
 async function loadData() {
 
@@ -135,7 +134,7 @@ async function loadData() {
 
     const towerSelect = document.getElementById("towerSelect");
 
-    startIndex = headers.indexOf("Team") + 1;
+    const startIndex = headers.indexOf("Team") + 1;
     towers = headers.slice(startIndex);
 
     const groups = {
@@ -151,15 +150,12 @@ async function loadData() {
         if (t.includes("Turret")) {
             groups["Turrets"].push(t);
         }
-
         else if (t.includes("Flak")) {
             groups["Flaks"].push(t);
         }
-
         else if (t.includes("Storm Tower") || t.includes("Lightning")) {
             groups["Wood Towers"].push(t);
         }
-
         else {
             groups["Electrum Towers"].push(t);
         }
@@ -169,23 +165,20 @@ async function loadData() {
         groups[g].sort((a, b) => a.localeCompare(b));
     });
 
-    // EMPTY BASES FIRST
+    // Empty bases first
     const emptyOpt = document.createElement("option");
     emptyOpt.value = "__EMPTY_BASES__";
     emptyOpt.textContent = "Empty Bases (0 Towers)";
     towerSelect.appendChild(emptyOpt);
 
-    // THEN GROUPS IN ORDER
     const order = ["Turrets", "Flaks", "Electrum Towers", "Wood Towers"];
 
     order.forEach(groupName => {
 
-        const list = groups[groupName];
-
         const optgroup = document.createElement("optgroup");
         optgroup.label = groupName;
 
-        list.forEach(tower => {
+        groups[groupName].forEach(tower => {
             const opt = document.createElement("option");
             opt.value = tower;
             opt.textContent = tower;
@@ -204,7 +197,13 @@ async function loadData() {
     });
 
     document.getElementById("results").innerHTML =
-        "<p>Data loaded successfully.</p>";
+        "<p>Select desired tower type to begin searching</p>";
+
+    // update placeholder text when user selects
+    towerSelect.addEventListener("change", () => {
+        const val = towerSelect.options[towerSelect.selectedIndex].text;
+        document.getElementById("results").innerHTML = `<p>Selected: ${val}</p>`;
+    });
 }
 
 function search() {
