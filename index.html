@@ -3,33 +3,26 @@
 <head>
 <meta charset="UTF-8">
 
-<!-- FIX: proper mobile + iframe scaling -->
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>War Dragons Tower Finder</title>
 
 <style>
 
-/* HARD RESET: prevents narrow layout */
 html, body {
-    width: 100vw;
-    max-width: 100vw;
     margin: 0;
     padding: 0;
-    overflow-x: hidden;
+    width: 100%;
+    max-width: 100%;
     background: #ffffff;
     color: #111;
     font-family: Arial, sans-serif;
 }
 
-/* main wrapper padding without shrinking layout */
-body {
+.container {
+    width: 100%;
+    max-width: 100%;
     padding: 12px;
-    box-sizing: border-box;
-    font-size: 16px;
-}
-
-* {
     box-sizing: border-box;
 }
 
@@ -38,13 +31,11 @@ h2 {
     margin: 8px 0 12px 0;
 }
 
-/* controls */
 .controls {
     display: flex;
     flex-direction: column;
     gap: 8px;
     width: 100%;
-    margin-bottom: 10px;
 }
 
 select, button {
@@ -52,14 +43,13 @@ select, button {
     padding: 10px;
     font-size: 16px;
     border-radius: 8px;
+    box-sizing: border-box;
 }
 
-/* dropdown */
 select {
     border: 1px solid #ccc;
 }
 
-/* button */
 button {
     border: none;
     background: #2d6cdf;
@@ -71,13 +61,11 @@ button:active {
     transform: scale(0.98);
 }
 
-/* results */
 #results {
     width: 100%;
     margin-top: 10px;
 }
 
-/* cards */
 .card {
     width: 100%;
     border: 1px solid #ddd;
@@ -105,10 +93,16 @@ button:active {
     padding: 2px 0;
 }
 
+* {
+    box-sizing: border-box;
+}
+
 </style>
 </head>
 
 <body>
+
+<div class="container">
 
 <h2>War Dragons Tower Finder</h2>
 
@@ -118,6 +112,8 @@ button:active {
 </div>
 
 <div id="results"></div>
+
+</div>
 
 <script>
 
@@ -141,7 +137,6 @@ async function loadData() {
         const startIndex = headers.indexOf("Team") + 1;
         let towers = headers.slice(startIndex);
 
-        // GROUPS
         const groups = {
             "Turrets": [],
             "Flaks": [],
@@ -149,23 +144,15 @@ async function loadData() {
         };
 
         towers.forEach(t => {
-            if (t.includes("Turret")) {
-                groups["Turrets"].push(t);
-            }
-            else if (t.includes("Flak")) {
-                groups["Flaks"].push(t);
-            }
-            else {
-                groups["Electrum Towers"].push(t);
-            }
+            if (t.includes("Turret")) groups["Turrets"].push(t);
+            else if (t.includes("Flak")) groups["Flaks"].push(t);
+            else groups["Electrum Towers"].push(t);
         });
 
-        // sort inside groups
         Object.keys(groups).forEach(g => {
             groups[g].sort((a, b) => a.localeCompare(b));
         });
 
-        // build dropdown
         Object.entries(groups).forEach(([groupName, list]) => {
 
             const optgroup = document.createElement("optgroup");
@@ -181,7 +168,6 @@ async function loadData() {
             towerSelect.appendChild(optgroup);
         });
 
-        // parse data
         data = rows.slice(1).map(r => {
             let obj = {};
             headers.forEach((h, i) => {
@@ -228,11 +214,7 @@ function search() {
         `;
 
         headers.slice(headers.indexOf("Team") + 1).forEach(t => {
-            html += `
-                <div>
-                    <b>${t}:</b> ${player[t] || 0}
-                </div>
-            `;
+            html += `<div><b>${t}:</b> ${player[t] || 0}</div>`;
         });
 
         html += `
@@ -246,8 +228,7 @@ function search() {
 
 function toggle(el) {
     const body = el.nextElementSibling;
-    body.style.display =
-        body.style.display === "block" ? "none" : "block";
+    body.style.display = body.style.display === "block" ? "none" : "block";
 }
 
 loadData();
