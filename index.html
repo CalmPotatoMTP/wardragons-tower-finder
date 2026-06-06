@@ -139,10 +139,11 @@ async function loadData() {
     towers = headers.slice(startIndex);
 
     const groups = {
+        "Empty Bases": [],
         "Turrets": [],
         "Flaks": [],
-        "Wood Towers": [],
-        "Electrum Towers": []
+        "Electrum Towers": [],
+        "Wood Towers": []
     };
 
     towers.forEach(t => {
@@ -150,12 +151,15 @@ async function loadData() {
         if (t.includes("Turret")) {
             groups["Turrets"].push(t);
         }
+
         else if (t.includes("Flak")) {
             groups["Flaks"].push(t);
         }
+
         else if (t.includes("Storm Tower") || t.includes("Lightning")) {
             groups["Wood Towers"].push(t);
         }
+
         else {
             groups["Electrum Towers"].push(t);
         }
@@ -165,8 +169,18 @@ async function loadData() {
         groups[g].sort((a, b) => a.localeCompare(b));
     });
 
-    // NORMAL GROUPS
-    Object.entries(groups).forEach(([groupName, list]) => {
+    // EMPTY BASES FIRST
+    const emptyOpt = document.createElement("option");
+    emptyOpt.value = "__EMPTY_BASES__";
+    emptyOpt.textContent = "Empty Bases (0 Towers)";
+    towerSelect.appendChild(emptyOpt);
+
+    // THEN GROUPS IN ORDER
+    const order = ["Turrets", "Flaks", "Electrum Towers", "Wood Towers"];
+
+    order.forEach(groupName => {
+
+        const list = groups[groupName];
 
         const optgroup = document.createElement("optgroup");
         optgroup.label = groupName;
@@ -180,12 +194,6 @@ async function loadData() {
 
         towerSelect.appendChild(optgroup);
     });
-
-    // EMPTY BASES OPTION (SPECIAL)
-    const emptyOpt = document.createElement("option");
-    emptyOpt.value = "__EMPTY_BASES__";
-    emptyOpt.textContent = "Empty Bases (0 Towers)";
-    towerSelect.appendChild(emptyOpt);
 
     data = rows.slice(1).map(r => {
         let obj = {};
@@ -205,7 +213,6 @@ function search() {
 
     let results = [];
 
-    // EMPTY BASES LOGIC
     if (selected === "__EMPTY_BASES__") {
 
         results = data.filter(d =>
