@@ -65,7 +65,13 @@ table {
     margin-top: 10px;
     font-size: 14px;
 }
-
+function toggle(el) {
+    const body = el.nextElementSibling;
+    body.style.display =
+        body.style.display === "block"
+            ? "none"
+            : "block";
+    }
 th, td {
     border: 1px solid #ddd;
     padding: 8px;
@@ -150,22 +156,64 @@ function search() {
 
     const results = data.filter(d => Number(d[tower]) === max);
 
-    let html = `<h3>Highest ${tower}: ${max}</h3>`;
-    html += "<table><tr><th>Player/Base</th><th>Team</th><th>Value</th></tr>";
+ let html = `<h3>Highest ${tower}: ${max}</h3>`;
 
-    results.forEach(r => {
-        html += `<tr>
-            <td>${r["Player Name"]}</td>
-            <td>${r["Team"]}</td>
-            <td>${r[tower]}</td>
-        </tr>`;
-    });
+results.forEach(player => {
+
+    html += `
+    <div class="card">
+
+        <div class="card-header" onclick="toggle(this)">
+            ▼ ${player["Player Name"]} (${player["Team"]})
+        </div>
+
+        <div class="card-body">
+    `;
+
+    headers
+        .slice(headers.indexOf("Team") + 1)
+        .forEach(t => {
+
+            html += `
+                <div>
+                    <b>${t}:</b> ${player[t] || 0}
+                </div>
+            `;
+
+        });
+
+    html += `
+        </div>
+    </div>
+    `;
+});
+
+document.getElementById("results").innerHTML = html;   });
 
     html += "</table>";
 
     document.getElementById("results").innerHTML = html;
 }
+.card {
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    margin-top: 10px;
+    background: #fff;
+    overflow: hidden;
+}
 
+.card-header {
+    padding: 12px;
+    font-weight: bold;
+    background: #f3f3f3;
+    cursor: pointer;
+}
+
+.card-body {
+    display: none;
+    padding: 10px;
+    font-size: 14px;
+    }
 loadData();
 
 </script>
