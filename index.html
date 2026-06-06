@@ -114,15 +114,21 @@ async function loadData() {
 
         const towerSelect = document.getElementById("towerSelect");
 
-        const startIndex = headers.indexOf("Team") + 1;
+  const startIndex = headers.indexOf("Team") + 1;
 
-        for (let i = startIndex; i < headers.length; i++) {
-            const opt = document.createElement("option");
-            opt.value = headers[i];
-            opt.textContent = headers[i];
-            towerSelect.appendChild(opt);
-        }
+// get all tower columns
+let towers = headers.slice(startIndex);
 
+// sort alphabetically
+towers.sort((a, b) => a.localeCompare(b));
+
+// add to dropdown
+towers.forEach(tower => {
+    const opt = document.createElement("option");
+    opt.value = tower;
+    opt.textContent = tower;
+    towerSelect.appendChild(opt);
+});
         data = rows.slice(1).map(r => {
             let obj = {};
             headers.forEach((h, i) => {
