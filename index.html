@@ -107,7 +107,9 @@ button:active {
 <h2>Egg Mission Bases</h2>
 
 <div class="controls">
-    <select id="towerSelect"></select>
+    <select id="towerSelect">
+        <option value="" selected disabled>Select desired tower type to begin searching</option>
+    </select>
     <button id="searchBtn" onclick="search()">Find Bases</button>
 </div>
 
@@ -165,7 +167,6 @@ async function loadData() {
         groups[g].sort((a, b) => a.localeCompare(b));
     });
 
-    // Empty bases first
     const emptyOpt = document.createElement("option");
     emptyOpt.value = "__EMPTY_BASES__";
     emptyOpt.textContent = "Empty Bases (0 Towers)";
@@ -188,21 +189,14 @@ async function loadData() {
         towerSelect.appendChild(optgroup);
     });
 
+    document.getElementById("towerSelect").selectedIndex = 0;
+
     data = rows.slice(1).map(r => {
         let obj = {};
         headers.forEach((h, i) => {
             obj[h] = (r[i] || "").replace(/"/g, "").trim();
         });
         return obj;
-    });
-
-    document.getElementById("results").innerHTML =
-        "<p>Select desired tower type to begin searching</p>";
-
-    // update placeholder text when user selects
-    towerSelect.addEventListener("change", () => {
-        const val = towerSelect.options[towerSelect.selectedIndex].text;
-        document.getElementById("results").innerHTML = `<p>Selected: ${val}</p>`;
     });
 }
 
