@@ -124,66 +124,77 @@ let headers = [];
 
 async function loadData() {
 
-    try {
-        const res = await fetch(CSV_URL);
-        const text = await res.text();
+    const res = await fetch(CSV_URL);
+    const text = await res.text();
 
-        const rows = text.trim().split("\n").map(r => r.split(","));
+    const rows = text.trim().split("\n").map(r => r.split(","));
 
-        headers = rows[0].map(h => h.replace(/"/g, "").trim());
+    headers = rows[0].map(h => h.replace(/"/g, "").trim());
 
-        const towerSelect = document.getElementById("towerSelect");
+    const towerSelect = document.getElementById("towerSelect");
 
-        const startIndex = headers.indexOf("Team") + 1;
-        let towers = headers.slice(startIndex);
+    const startIndex = headers.indexOf("Team") + 1;
+    let towers = headers.slice(startIndex);
 
-        const groups = {
-            "Turrets": [],
-            "Flaks": [],
-            "Electrum Towers": []
-        };
+    const groups = {
+        "Turrets": [],
+        "Flaks": [],
+        "Wood Towers": [],
+        "Electrum Towers": []
+    };
 
-        towers.forEach(t => {
-            if (t.includes("Turret")) groups["Turrets"].push(t);
-            else if (t.includes("Flak")) groups["Flaks"].push(t);
-            else groups["Electrum Towers"].push(t);
+    towers.forEach(t => {
+
+        // Turrets
+        if (t.includes("Turret")) {
+            groups["Turrets"].push(t);
+        }
+
+        // Flaks
+        else if (t.includes("Flak")) {
+            groups["Flaks"].push(t);
+        }
+
+        // Wood Towers (FIXED REQUEST)
+        else if (t.includes("Storm Tower") || t.includes("Lightning")) {
+            groups["Wood Towers"].push(t);
+        }
+
+        // Everything else = Electrum
+        else {
+            groups["Electrum Towers"].push(t);
+        }
+    });
+
+    Object.keys(groups).forEach(g => {
+        groups[g].sort((a, b) => a.localeCompare(b));
+    });
+
+    Object.entries(groups).forEach(([groupName, list]) => {
+
+        const optgroup = document.createElement("optgroup");
+        optgroup.label = groupName;
+
+        list.forEach(tower => {
+            const opt = document.createElement("option");
+            opt.value = tower;
+            opt.textContent = tower;
+            optgroup.appendChild(opt);
         });
 
-        Object.keys(groups).forEach(g => {
-            groups[g].sort((a, b) => a.localeCompare(b));
+        towerSelect.appendChild(optgroup);
+    });
+
+    data = rows.slice(1).map(r => {
+        let obj = {};
+        headers.forEach((h, i) => {
+            obj[h] = (r[i] || "").replace(/"/g, "").trim();
         });
+        return obj;
+    });
 
-        Object.entries(groups).forEach(([groupName, list]) => {
-
-            const optgroup = document.createElement("optgroup");
-            optgroup.label = groupName;
-
-            list.forEach(tower => {
-                const opt = document.createElement("option");
-                opt.value = tower;
-                opt.textContent = tower;
-                optgroup.appendChild(opt);
-            });
-
-            towerSelect.appendChild(optgroup);
-        });
-
-        data = rows.slice(1).map(r => {
-            let obj = {};
-            headers.forEach((h, i) => {
-                obj[h] = (r[i] || "").replace(/"/g, "").trim();
-            });
-            return obj;
-        });
-
-        document.getElementById("results").innerHTML =
-            "<p>Data loaded successfully.</p>";
-
-    } catch (err) {
-        document.getElementById("results").innerHTML =
-            "<p style='color:red;'>Failed to load Google Sheet</p>";
-        console.error(err);
-    }
+    document.getElementById("results").innerHTML =
+        "<p>Data loaded successfully.</p>";
 }
 
 function search() {
