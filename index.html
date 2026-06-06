@@ -2,15 +2,28 @@
 <html>
 <head>
 <meta charset="UTF-8">
+
+<!-- IMPORTANT: fixes mobile + iframe scaling -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>War Dragons Tower Finder</title>
- 
+
 <style>
-body {
-    font-family: Arial, sans-serif;
+
+/* RESET — prevents narrow iframe rendering */
+html, body {
+    width: 100%;
+    max-width: 100%;
     margin: 0;
-    padding: 12px;
+    padding: 0;
     background: #ffffff;
     color: #111;
+    font-family: Arial, sans-serif;
+}
+
+/* main spacing wrapper */
+body {
+    padding: 12px;
     font-size: 16px;
 }
 
@@ -19,11 +32,13 @@ h2 {
     margin: 8px 0 12px 0;
 }
 
+/* controls */
 .controls {
     display: flex;
     flex-direction: column;
     gap: 8px;
     margin-bottom: 10px;
+    width: 100%;
 }
 
 select {
@@ -32,6 +47,7 @@ select {
     border: 1px solid #ccc;
     border-radius: 8px;
     width: 100%;
+    box-sizing: border-box;
 }
 
 button {
@@ -42,17 +58,23 @@ button {
     background: #2d6cdf;
     color: white;
     font-weight: bold;
+    width: 100%;
 }
 
 button:active {
     transform: scale(0.98);
 }
 
+/* results container */
 #results {
     margin-top: 10px;
+    width: 100%;
 }
 
+/* cards */
 .card {
+    width: 100%;
+    box-sizing: border-box;
     border: 1px solid #ddd;
     border-radius: 10px;
     margin-top: 10px;
@@ -81,6 +103,7 @@ button:active {
 * {
     box-sizing: border-box;
 }
+
 </style>
 </head>
 
@@ -115,14 +138,49 @@ async function loadData() {
         const towerSelect = document.getElementById("towerSelect");
 
         const startIndex = headers.indexOf("Team") + 1;
+        let towers = headers.slice(startIndex);
 
-        for (let i = startIndex; i < headers.length; i++) {
-            const opt = document.createElement("option");
-            opt.value = headers[i];
-            opt.textContent = headers[i];
-            towerSelect.appendChild(opt);
-        }
+        // GROUPS
+        const groups = {
+            "Turrets": [],
+            "Flaks": [],
+            "Electrum Towers": []
+        };
 
+        towers.forEach(t => {
+            if (t.includes("Turret")) {
+                groups["Turrets"].push(t);
+            }
+            else if (t.includes("Flak")) {
+                groups["Flaks"].push(t);
+            }
+            else {
+                groups["Electrum Towers"].push(t);
+            }
+        });
+
+        // sort groups
+        Object.keys(groups).forEach(g => {
+            groups[g].sort((a, b) => a.localeCompare(b));
+        });
+
+        // build dropdown
+        Object.entries(groups).forEach(([groupName, list]) => {
+
+            const optgroup = document.createElement("optgroup");
+            optgroup.label = groupName;
+
+            list.forEach(tower => {
+                const opt = document.createElement("option");
+                opt.value = tower;
+                opt.textContent = tower;
+                optgroup.appendChild(opt);
+            });
+
+            towerSelect.appendChild(optgroup);
+        });
+
+        // parse data
         data = rows.slice(1).map(r => {
             let obj = {};
             headers.forEach((h, i) => {
