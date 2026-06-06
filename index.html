@@ -108,7 +108,7 @@ button:active {
 
 <div class="controls">
     <select id="towerSelect"></select>
-    <button onclick="search()">Find Highest</button>
+    <button onclick="search()">Find Results</button>
 </div>
 
 <div id="results"></div>
@@ -121,6 +121,8 @@ const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQSlEUS6MDHupFo
 
 let data = [];
 let headers = [];
+let towers = [];
+let startIndex = 0;
 
 async function loadData() {
 
@@ -133,8 +135,8 @@ async function loadData() {
 
     const towerSelect = document.getElementById("towerSelect");
 
-    const startIndex = headers.indexOf("Team") + 1;
-    let towers = headers.slice(startIndex);
+    startIndex = headers.indexOf("Team") + 1;
+    towers = headers.slice(startIndex);
 
     const groups = {
         "Turrets": [],
@@ -145,22 +147,15 @@ async function loadData() {
 
     towers.forEach(t => {
 
-        // Turrets
         if (t.includes("Turret")) {
             groups["Turrets"].push(t);
         }
-
-        // Flaks
         else if (t.includes("Flak")) {
             groups["Flaks"].push(t);
         }
-
-        // Wood Towers (FIXED REQUEST)
         else if (t.includes("Storm Tower") || t.includes("Lightning")) {
             groups["Wood Towers"].push(t);
         }
-
-        // Everything else = Electrum
         else {
             groups["Electrum Towers"].push(t);
         }
@@ -170,6 +165,7 @@ async function loadData() {
         groups[g].sort((a, b) => a.localeCompare(b));
     });
 
+    // NORMAL GROUPS
     Object.entries(groups).forEach(([groupName, list]) => {
 
         const optgroup = document.createElement("optgroup");
@@ -185,6 +181,12 @@ async function loadData() {
         towerSelect.appendChild(optgroup);
     });
 
+    // EMPTY BASES OPTION (SPECIAL)
+    const emptyOpt = document.createElement("option");
+    emptyOpt.value = "__EMPTY_BASES__";
+    emptyOpt.textContent = "Empty Bases (0 Towers)";
+    towerSelect.appendChild(emptyOpt);
+
     data = rows.slice(1).map(r => {
         let obj = {};
         headers.forEach((h, i) => {
@@ -199,18 +201,30 @@ async function loadData() {
 
 function search() {
 
-    const tower = document.getElementById("towerSelect").value;
+    const selected = document.getElementById("towerSelect").value;
 
-    let max = 0;
+    let results = [];
 
-    data.forEach(d => {
-        const val = Number(d[tower]) || 0;
-        if (val > max) max = val;
-    });
+    // EMPTY BASES LOGIC
+    if (selected === "__EMPTY_BASES__") {
 
-    const results = data.filter(d => Number(d[tower]) === max);
+        results = data.filter(d =>
+            towers.every(t => Number(d[t]) === 0)
+        );
 
-    let html = `<h3>Highest ${tower}: ${max}</h3>`;
+    } else {
+
+        let max = 0;
+
+        data.forEach(d => {
+            const val = Number(d[selected]) || 0;
+            if (val > max) max = val;
+        });
+
+        results = data.filter(d => Number(d[selected]) === max);
+    }
+
+    let html = `<h3>Results</h3>`;
 
     results.forEach(player => {
 
