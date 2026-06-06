@@ -50,32 +50,41 @@ let headers = [];
 
 async function loadData() {
 
-    const res = await fetch(CSV_URL);
-    const text = await res.text();
+    try {
+        const res = await fetch(CSV_URL);
+        const text = await res.text();
 
-    const rows = text.trim().split("\n").map(r => r.split(","));
+        const rows = text.trim().split("\n").map(r => r.split(","));
 
-    headers = rows[0].map(h => h.replace(/"/g,"").trim());
+        headers = rows[0].map(h => h.replace(/"/g,"").trim());
 
-    const towerSelect = document.getElementById("towerSelect");
+        const towerSelect = document.getElementById("towerSelect");
 
-    // tower columns start after "Team"
-    const startIndex = headers.indexOf("Team") + 1;
+        const startIndex = headers.indexOf("Team") + 1;
 
-    for (let i = startIndex; i < headers.length; i++) {
-        let opt = document.createElement("option");
-        opt.value = headers[i];
-        opt.textContent = headers[i];
-        towerSelect.appendChild(opt);
-    }
+        for (let i = startIndex; i < headers.length; i++) {
+            let opt = document.createElement("option");
+            opt.value = headers[i];
+            opt.textContent = headers[i];
+            towerSelect.appendChild(opt);
+        }
 
-    data = rows.slice(1).map(r => {
-        let obj = {};
-        headers.forEach((h,i) => {
-            obj[h] = (r[i] || "").replace(/"/g,"").trim();
+        data = rows.slice(1).map(r => {
+            let obj = {};
+            headers.forEach((h,i) => {
+                obj[h] = (r[i] || "").replace(/"/g,"").trim();
+            });
+            return obj;
         });
-        return obj;
-    });
+
+        document.getElementById("results").innerHTML =
+            "<p>Data loaded successfully.</p>";
+
+    } catch (err) {
+        document.getElementById("results").innerHTML =
+            "<p style='color:red;'>Failed to load Google Sheet</p>";
+        console.error(err);
+    }
 }
 
 function search() {
@@ -92,7 +101,7 @@ function search() {
     const results = data.filter(d => Number(d[tower]) === max);
 
     let html = `<h3>Highest ${tower}: ${max}</h3>`;
-    html += "<table><tr><th>Base/Player</th><th>Team</th><th>Value</th></tr>";
+    html += "<table><tr><th>Player/Base</th><th>Team</th><th>Value</th></tr>";
 
     results.forEach(r => {
         html += `<tr>
