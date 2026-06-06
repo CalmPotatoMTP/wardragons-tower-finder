@@ -1,205 +1,46 @@
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>War Dragons Tower Finder</title>
+const towerSelect = document.getElementById("towerSelect");
 
-<style>
-body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 12px;
-    background: #ffffff;
-    color: #111;
-    font-size: 16px;
-}
+// define groups manually
+const groups = {
+    "Turrets": [],
+    "Flaks": [],
+    "Electrum Towers": []
+};
 
-h2 {
-    font-size: 18px;
-    margin: 8px 0 12px 0;
-}
-
-.controls {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    margin-bottom: 10px;
-}
-
-select {
-    padding: 10px;
-    font-size: 16px;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    width: 100%;
-}
-
-button {
-    padding: 10px;
-    font-size: 16px;
-    border-radius: 8px;
-    border: none;
-    background: #2d6cdf;
-    color: white;
-    font-weight: bold;
-}
-
-button:active {
-    transform: scale(0.98);
-}
-
-#results {
-    margin-top: 10px;
-}
-
-.card {
-    border: 1px solid #ddd;
-    border-radius: 10px;
-    margin-top: 10px;
-    background: #fff;
-    overflow: hidden;
-}
-
-.card-header {
-    padding: 12px;
-    font-weight: bold;
-    background: #f3f3f3;
-    cursor: pointer;
-}
-
-.card-body {
-    display: none;
-    padding: 10px;
-    font-size: 14px;
-    line-height: 1.5;
-}
-
-.card-body div {
-    padding: 2px 0;
-}
-
-* {
-    box-sizing: border-box;
-}
-</style>
-</head>
-
-<body>
-
-<h2>War Dragons Tower Finder</h2>
-
-<div class="controls">
-    <select id="towerSelect"></select>
-    <button onclick="search()">Find Highest</button>
-</div>
-
-<div id="results"></div>
-
-<script>
-
-const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQSlEUS6MDHupFoy3cmgAkBMrKudzYQr-3nJheF0WG6-f1rGhrBf2DmROEx-H0YuWmFo1dfF4dIvg-N/pub?output=csv";
-
-let data = [];
-let headers = [];
-
-async function loadData() {
-
-    try {
-        const res = await fetch(CSV_URL);
-        const text = await res.text();
-
-        const rows = text.trim().split("\n").map(r => r.split(","));
-
-        headers = rows[0].map(h => h.replace(/"/g, "").trim());
-
-        const towerSelect = document.getElementById("towerSelect");
-
-  const startIndex = headers.indexOf("Team") + 1;
-
-// get all tower columns
+const startIndex = headers.indexOf("Team") + 1;
 let towers = headers.slice(startIndex);
 
-// sort alphabetically
-towers.sort((a, b) => a.localeCompare(b));
+// assign towers to groups
+towers.forEach(t => {
 
-// add to dropdown
-towers.forEach(tower => {
-    const opt = document.createElement("option");
-    opt.value = tower;
-    opt.textContent = tower;
-    towerSelect.appendChild(opt);
-});
-        data = rows.slice(1).map(r => {
-            let obj = {};
-            headers.forEach((h, i) => {
-                obj[h] = (r[i] || "").replace(/"/g, "").trim();
-            });
-            return obj;
-        });
-
-        document.getElementById("results").innerHTML =
-            "<p>Data loaded successfully.</p>";
-
-    } catch (err) {
-        document.getElementById("results").innerHTML =
-            "<p style='color:red;'>Failed to load Google Sheet</p>";
-        console.error(err);
+    if (t.includes("Turret")) {
+        groups["Turrets"].push(t);
     }
-}
+    else if (t.includes("Flak")) {
+        groups["Flaks"].push(t);
+    }
+    else {
+        groups["Electrum Towers"].push(t);
+    }
+});
 
-function search() {
+// optional: sort inside each group
+Object.keys(groups).forEach(g => {
+    groups[g].sort((a, b) => a.localeCompare(b));
+});
 
-    const tower = document.getElementById("towerSelect").value;
+// build grouped dropdown
+Object.entries(groups).forEach(([groupName, list]) => {
 
-    let max = 0;
+    const optgroup = document.createElement("optgroup");
+    optgroup.label = groupName;
 
-    data.forEach(d => {
-        const val = Number(d[tower]) || 0;
-        if (val > max) max = val;
+    list.forEach(tower => {
+        const opt = document.createElement("option");
+        opt.value = tower;
+        opt.textContent = tower;
+        optgroup.appendChild(opt);
     });
 
-    const results = data.filter(d => Number(d[tower]) === max);
-
-    let html = `<h3>Highest ${tower}: ${max}</h3>`;
-
-    results.forEach(player => {
-
-        html += `
-        <div class="card">
-
-            <div class="card-header" onclick="toggle(this)">
-                ▼ ${player["Player Name"]} (${player["Team"]})
-            </div>
-
-            <div class="card-body">
-        `;
-
-        headers.slice(headers.indexOf("Team") + 1).forEach(t => {
-            html += `
-                <div>
-                    <b>${t}:</b> ${player[t] || 0}
-                </div>
-            `;
-        });
-
-        html += `
-            </div>
-        </div>
-        `;
-    });
-
-    document.getElementById("results").innerHTML = html;
-}
-
-function toggle(el) {
-    const body = el.nextElementSibling;
-    body.style.display =
-        body.style.display === "block" ? "none" : "block";
-}
-
-loadData();
-
-</script>
-
-</body>
-</html>
+    towerSelect.appendChild(optgroup);
+});
